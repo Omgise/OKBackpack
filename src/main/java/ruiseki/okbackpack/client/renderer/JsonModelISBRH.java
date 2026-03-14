@@ -46,8 +46,8 @@ public class JsonModelISBRH extends ModelISBRH {
 
         GL11.glPushMatrix();
 
-        GL11.glRotated(90f, 0f, 1f, 0f);
         GL11.glRotatef(180f, 0f, 0f, 1f);
+        GL11.glRotatef(180f, 0f, 1f, 0f);
 
         GL11.glEnable(GL11.GL_BLEND);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -69,9 +69,9 @@ public class JsonModelISBRH extends ModelISBRH {
                     quadColor = BlockColor.getColor(block, stack, quad.getColorIndex());
                 }
 
-                float r = (quadColor & 0xFF) / 255f;
-                float g = (quadColor >> 8 & 0xFF) / 255f;
-                float b = (quadColor >> 16 & 0xFF) / 255f;
+                final float r = (quadColor >> 16 & 255) / 255f;
+                final float g = (quadColor >> 8 & 255) / 255f;
+                final float b = (quadColor & 255) / 255f;
 
                 final float shade = diffuseLight(quad.getComputedFaceNormal());
                 tessellator.setColorOpaque_F(r * shade, g * shade, b * shade);

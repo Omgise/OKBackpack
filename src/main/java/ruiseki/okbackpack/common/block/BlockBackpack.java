@@ -50,7 +50,6 @@ import ruiseki.okbackpack.client.renderer.JsonModelISBRH;
 import ruiseki.okbackpack.client.renderer.RenderHelpers;
 import ruiseki.okbackpack.common.entity.EntityBackpack;
 import ruiseki.okcore.block.BlockOK;
-import ruiseki.okcore.enums.EnumDye;
 import ruiseki.okcore.helper.ItemNBTHelpers;
 import ruiseki.okcore.helper.LangHelpers;
 import ruiseki.okcore.item.ItemBlockBauble;
@@ -127,11 +126,10 @@ public class BlockBackpack extends BlockOK implements IBlockColor {
 
     private ForgeDirection getDirectionForHeading(int heading) {
         return switch (heading) {
-            case 0 -> ForgeDirection.SOUTH;
             case 1 -> ForgeDirection.EAST;
             case 2 -> ForgeDirection.NORTH;
             case 3 -> ForgeDirection.WEST;
-            default -> ForgeDirection.NORTH;
+            default -> ForgeDirection.SOUTH;
         };
     }
 
@@ -154,32 +152,31 @@ public class BlockBackpack extends BlockOK implements IBlockColor {
     @Override
     public int colorMultiplier(@Nullable ItemStack stack, int tintIndex) {
         if (stack == null) return -1;
-        NBTTagCompound tag = ItemNBTHelpers.getNBT(stack);
-        int main = tag.hasKey(MAIN_COLOR) ? tag.getInteger(MAIN_COLOR) : 0xFFCC613A;
-        int accent = tag.hasKey(ACCENT_COLOR) ? tag.getInteger(ACCENT_COLOR) : 0xFF622E1A;
 
-        if (tintIndex == 0) {
-            return EnumDye.rgbToAbgr(main);
-        }
-        if (tintIndex == 1) {
-            return EnumDye.rgbToAbgr(accent);
-        }
-        return -1;
+        NBTTagCompound tag = ItemNBTHelpers.getNBT(stack);
+
+        int main = tag.hasKey(MAIN_COLOR) ? tag.getInteger(MAIN_COLOR) : 0xCC613A;
+        int accent = tag.hasKey(ACCENT_COLOR) ? tag.getInteger(ACCENT_COLOR) : 0x622E1A;
+
+        return switch (tintIndex) {
+            case 0 -> main;
+            case 1 -> accent;
+            default -> -1;
+        };
     }
 
     @Override
     public int colorMultiplier(@Nullable IBlockAccess world, int x, int y, int z, int tintIndex) {
         if (world == null) return -1;
+
         TileEntity te = world.getTileEntity(x, y, z);
-        if (te instanceof TEBackpack backpack) {
-            if (tintIndex == 0) {
-                return EnumDye.rgbToAbgr(backpack.getMainColor());
-            }
-            if (tintIndex == 1) {
-                return EnumDye.rgbToAbgr(backpack.getAccentColor());
-            }
-        }
-        return -1;
+        if (!(te instanceof TEBackpack backpack)) return -1;
+
+        return switch (tintIndex) {
+            case 0 -> backpack.getMainColor();
+            case 1 -> backpack.getAccentColor();
+            default -> -1;
+        };
     }
 
     @Override
