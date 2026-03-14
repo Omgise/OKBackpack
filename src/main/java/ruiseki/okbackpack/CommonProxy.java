@@ -24,10 +24,4 @@ public class CommonProxy extends CommonProxyComponent {
         packetHandler.register(PacketSyncCarriedItem.class);
         packetHandler.register(PacketQuickDraw.class);
     }
-
-    @Override
-    public void registerEventHooks() {
-        super.registerEventHooks();;
-        MinecraftForge.EVENT_BUS.register(new ItemRenderEvent());
-    }
 }

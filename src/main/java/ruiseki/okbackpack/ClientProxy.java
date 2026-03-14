@@ -2,10 +2,12 @@ package ruiseki.okbackpack;
 
 import net.minecraft.client.settings.KeyBinding;
 
+import net.minecraftforge.common.MinecraftForge;
 import org.lwjgl.input.Keyboard;
 
 import ruiseki.okbackpack.client.key.OpenBackpackHandler;
 import ruiseki.okbackpack.client.key.PickBlockHandler;
+import ruiseki.okbackpack.common.event.ItemRenderEvent;
 import ruiseki.okbackpack.compat.Mods;
 import ruiseki.okbackpack.compat.nei.BackpackGuiOpener;
 import ruiseki.okcore.client.key.IKeyRegistry;
@@ -40,5 +42,11 @@ public class ClientProxy extends ClientProxyComponent {
         if (Mods.NotEnoughItems.isLoaded()) {
             new BackpackGuiOpener(keyOpenBackpack);
         }
+    }
+
+    @Override
+    public void registerEventHooks() {
+        super.registerEventHooks();;
+        MinecraftForge.EVENT_BUS.register(new ItemRenderEvent());
     }
 }
