@@ -37,49 +37,44 @@ public class AdvancedFeedingUpgradeWrapper extends AdvancedUpgradeWrapper implem
     }
 
     @Override
-    public ItemStack getFeedingStack(IItemHandler handler, int foodLevel, float health, float maxHealth) {
-        int size = handler.getSlots();
+    public int getFoodSlot(IItemHandler handler, int foodLevel, float health, float maxHealth) {
 
-        for (int i = 0; i < size; i++) {
-            ItemStack stack = handler.getStackInSlot(i);
-            if (stack == null || stack.stackSize <= 0) {
-                continue;
-            }
-
-            if (!checkFilter(stack)) {
-                continue;
-            }
+        int missingHunger = 20 - foodLevel;
+        for (int slot = 0; slot < handler.getSlots(); slot++) {
+            ItemStack stack = handler.getStackInSlot(slot);
+            if (stack == null || stack.stackSize <= 0) continue;
+            if (!checkFilter(stack)) continue;
 
             ItemFood item = stack.getItem() instanceof ItemFood ? (ItemFood) stack.getItem() : null;
-            if (item == null) {
-                continue;
-            }
+            if (item == null) continue;
 
             int healingAmount = item.func_150905_g(stack);
 
-            if (maxHealth > health && getHealthFeedingStrategy() == FeedingStrategy.HEALTH.ALWAYS) {
-                return handler.extractItem(i, 1, false);
-            }
+            if (maxHealth > health && getHealthFeedingStrategy() == FeedingStrategy.HEALTH.ALWAYS) return slot;
 
-            boolean flag = false;
+            boolean flag;
+
             switch (getHungerFeedingStrategy()) {
+
                 case FULL:
-                    flag = healingAmount <= 20 - foodLevel;
+                    flag = healingAmount <= missingHunger;
                     break;
+
                 case HALF:
-                    flag = healingAmount / 2 <= 20 - foodLevel;
+                    flag = healingAmount / 2 <= missingHunger;
                     break;
+
                 case ALWAYS:
                     flag = foodLevel < 20;
                     break;
+
+                default:
+                    flag = false;
             }
 
-            if (flag) {
-                return handler.extractItem(i, 1, false);
-            }
+            if (flag) return slot;
         }
-
-        return null;
+        return -1;
     }
 
     public FeedingStrategy.Hunger getHungerFeedingStrategy() {

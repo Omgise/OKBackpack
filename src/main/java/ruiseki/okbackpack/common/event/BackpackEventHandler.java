@@ -180,17 +180,7 @@ public class BackpackEventHandler {
 
             BackpackWrapper handler = new BackpackWrapper(stack.copy(), backpack);
 
-            ItemStack feedingStack = handler.getFeedingStack(
-                player.getFoodStats()
-                    .getFoodLevel(),
-                player.getHealth(),
-                player.getMaxHealth());
-
-            if (feedingStack == null || feedingStack.stackSize <= 0) {
-                continue;
-            }
-
-            feedingStack.onFoodEaten(player.worldObj, player);
+            handler.feed(player, handler);
 
             OKBackpack.instance.getPacketHandler()
                 .sendToServer(new PacketBackpackNBT(i, handler.getTagCompound(), type));
