@@ -56,6 +56,10 @@ public class BackpackSlotSH extends ItemSlotSH {
     @Override
     public void readOnClient(int id, PacketBuffer buf) {
         super.readOnClient(id, buf);
-        wrapper.syncToServer();
+        if (id == UPDATE_SET_MEMORY_STACK || id == UPDATE_UNSET_MEMORY_STACK
+            || id == UPDATE_SET_SLOT_LOCK
+            || id == UPDATE_UNSET_SLOT_LOCK) {
+            wrapper.syncToServer();
+        }
     }
 }
