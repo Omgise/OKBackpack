@@ -32,9 +32,6 @@ import ruiseki.okbackpack.config.ModConfig;
 
 public class BackpackEventHandler {
 
-    private static int feedTickCounter = 0;
-    private static int magnetTickCounter = 0;
-
     public BackpackEventHandler() {
         MinecraftForge.EVENT_BUS.register(this);
         FMLCommonHandler.instance()
@@ -45,20 +42,16 @@ public class BackpackEventHandler {
     @SubscribeEvent
     public void onPlayerPickup(EntityItemPickupEvent event) {
         EntityPlayer player = event.entityPlayer;
-        IInventory inventory = player.inventory;
-        ItemStack stack = event.item.getEntityItem()
-            .copy();
-
-        if (player.openContainer instanceof BackPackContainer) {
-            return;
-        }
+        if (player.openContainer instanceof BackPackContainer) return;
+        ItemStack stack = event.item.getEntityItem().copy();
 
         if (Mods.Baubles.isLoaded()) {
-            IInventory baublesInventory = BaublesApi.getBaubles(player);
-            stack = attemptPickup(baublesInventory, stack, InventoryTypes.BAUBLES);
+            IInventory inventory = BaublesApi.getBaubles(player);
+            stack = attemptPickup(inventory, stack, InventoryTypes.BAUBLES);
         }
 
-        if (stack == null) {
+        if (stack != null) {
+            IInventory inventory = player.inventory;
             stack = attemptPickup(inventory, stack, InventoryTypes.PLAYER);
         }
 
@@ -95,29 +88,31 @@ public class BackpackEventHandler {
     }
 
     private ItemStack attemptPickup(IInventory targetInventory, ItemStack stack, InventoryType type) {
-
         for (int i = 0; i < targetInventory.getSizeInventory(); i++) {
             ItemStack backpackStack = targetInventory.getStackInSlot(i);
-            if (backpackStack == null || backpackStack.stackSize <= 0) {
-                continue;
-            }
+            if (backpackStack == null || backpackStack.stackSize <= 0) continue;
 
-            if (!(backpackStack.getItem() instanceof BlockBackpack.ItemBackpack backpack)) {
-                continue;
-            }
+            if (!(backpackStack.getItem() instanceof BlockBackpack.ItemBackpack backpack)) continue;
 
             BackpackWrapper handler = new BackpackWrapper(backpackStack, backpack);
 
-            if (!handler.canPickupItem(stack)) {
-                continue;
+            if (!handler.canPickupItem(stack)) continue;
+
+            ItemStack before = stack.copy();
+
+            ItemStack result = handler.insertItem(stack, false);
+
+            boolean changed = result == null || result.stackSize != before.stackSize;
+
+            if (changed) {
+                OKBackpack.instance.getPacketHandler()
+                    .sendToServer(new PacketBackpackNBT(i, handler.getTagCompound(), type));
             }
 
-            stack = handler.insertItem(stack, false);
+            stack = result;
 
-            OKBackpack.instance.getPacketHandler()
-                .sendToServer(new PacketBackpackNBT(i, handler.getTagCompound(), type));
-            if (stack == null) {
-                break;
+            if (stack == null || stack.stackSize <= 0) {
+                return null;
             }
         }
 
@@ -139,16 +134,11 @@ public class BackpackEventHandler {
 
         ItemStack held = player.getHeldItem();
         if (held != null && held.getItem() instanceof BlockBackpack.ItemBackpack) {
-            feedTickCounter = -100;
             return;
         }
 
-        feedTickCounter++;
-        if (feedTickCounter % 20 == 0) {
-            feedTickCounter = 0;
-            if (!player.capabilities.isCreativeMode) {
-                attemptFeed(player);
-            }
+        if (!player.capabilities.isCreativeMode && player.ticksExisted % 20 == 0) {
+            attemptFeed(player);
         }
     }
 
@@ -178,13 +168,16 @@ public class BackpackEventHandler {
                 continue;
             }
 
-            BackpackWrapper handler = new BackpackWrapper(stack.copy(), backpack);
+            BackpackWrapper handler = new BackpackWrapper(stack, backpack);
 
-            handler.feed(player, handler);
+            boolean result = handler.feed(player, handler);
 
-            OKBackpack.instance.getPacketHandler()
-                .sendToServer(new PacketBackpackNBT(i, handler.getTagCompound(), type));
-            return true;
+            if (result) {
+                OKBackpack.instance.getPacketHandler()
+                    .sendToServer(new PacketBackpackNBT(i, stack.getTagCompound(), type));
+            }
+
+            return result;
         }
 
         return false;
@@ -192,18 +185,9 @@ public class BackpackEventHandler {
 
     @SubscribeEvent
     public void onPlayerTickMagnet(TickEvent.PlayerTickEvent event) {
-        if (!(event.player instanceof EntityPlayerMP player)) {
-            return;
-        }
-        if (event.phase != TickEvent.Phase.END) {
-            return;
-        }
-
-        magnetTickCounter++;
-        if (magnetTickCounter % 2 == 0) {
-            magnetTickCounter = 0;
-            attemptMagnet(player);
-        }
+        if (!(event.player instanceof EntityPlayerMP player)) return;
+        if (event.phase != TickEvent.Phase.END) return;
+        if (player.ticksExisted % 2 == 0) attemptMagnet(player);
     }
 
     public void attemptMagnet(EntityPlayer player) {
@@ -232,7 +216,7 @@ public class BackpackEventHandler {
                 continue;
             }
 
-            BackpackWrapper handler = new BackpackWrapper(stack.copy(), backpack);
+            BackpackWrapper handler = new BackpackWrapper(stack, backpack);
 
             AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(
                 player.posX - ModConfig.magnetRange,
@@ -244,11 +228,11 @@ public class BackpackEventHandler {
 
             List<Entity> entities = handler.getMagnetEntities(player.worldObj, aabb);
             if (entities.isEmpty()) {
-                return false;
+                continue;
             }
             int pulled = 0;
             for (Entity entity : entities) {
-                if (pulled++ > 200) {
+                if (pulled++ > 20) {
                     break;
                 }
                 Vector3d target = new Vector3d(

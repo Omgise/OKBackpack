@@ -30,8 +30,7 @@ public interface IFeedingUpgrade {
             return false;
         }
 
-        food = foodItem.onEaten(food, entity.worldObj, entity);
-        handler.insertItem(slot, food, false);
+        foodItem.onEaten(food, entity.worldObj, entity);
 
         return true;
     }

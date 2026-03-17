@@ -148,9 +148,21 @@ public class BackpackWrapper implements IItemHandlerModifiable, INBTSerializable
         this.searchBackpack = true;
         this.keepTab = true;
 
-        this.backpackHandler = new BackpackItemStackHandler(backpackSlots, this);
+        this.backpackHandler = new BackpackItemStackHandler(backpackSlots, this) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                super.onContentsChanged(slot);
+                writeToItem();
+            }
+        };
 
-        this.upgradeHandler = new UpgradeItemStackHandler(upgradeSlots);
+        this.upgradeHandler = new UpgradeItemStackHandler(upgradeSlots) {
+            @Override
+            protected void onContentsChanged(int slot) {
+                super.onContentsChanged(slot);
+                writeToItem();
+            }
+        };
 
         readFromItem();
     }

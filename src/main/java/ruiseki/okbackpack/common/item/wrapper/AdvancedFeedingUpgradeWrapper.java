@@ -52,25 +52,12 @@ public class AdvancedFeedingUpgradeWrapper extends AdvancedUpgradeWrapper implem
 
             if (maxHealth > health && getHealthFeedingStrategy() == FeedingStrategy.HEALTH.ALWAYS) return slot;
 
-            boolean flag;
-
-            switch (getHungerFeedingStrategy()) {
-
-                case FULL:
-                    flag = healingAmount <= missingHunger;
-                    break;
-
-                case HALF:
-                    flag = healingAmount / 2 <= missingHunger;
-                    break;
-
-                case ALWAYS:
-                    flag = foodLevel < 20;
-                    break;
-
-                default:
-                    flag = false;
-            }
+            boolean flag = switch (getHungerFeedingStrategy()) {
+                case FULL -> healingAmount <= missingHunger;
+                case HALF -> healingAmount / 2 <= missingHunger;
+                case ALWAYS -> foodLevel < 20;
+                default -> false;
+            };
 
             if (flag) return slot;
         }

@@ -11,6 +11,7 @@ import com.cleanroommc.modularui.factory.inventory.InventoryType;
 import com.cleanroommc.modularui.factory.inventory.InventoryTypes;
 
 import baubles.api.BaublesApi;
+import ruiseki.okbackpack.common.block.BlockBackpack;
 import ruiseki.okbackpack.compat.Mods;
 import ruiseki.okcore.network.CodecField;
 import ruiseki.okcore.network.PacketCodec;
@@ -48,16 +49,17 @@ public class PacketBackpackNBT extends PacketCodec {
         if (type == null || nbt == null) return;
 
         ItemStack stack = null;
-        if (type == InventoryTypes.PLAYER) {
-            stack = player.inventory.getStackInSlot(slot);
-        }
-
         if (type == InventoryTypes.BAUBLES && Mods.Baubles.isLoaded()) {
             IInventory baublesInventory = BaublesApi.getBaubles(player);
             stack = baublesInventory.getStackInSlot(slot);
         }
+
+        if (type == InventoryTypes.PLAYER) {
+            stack = player.inventory.getStackInSlot(slot);
+        }
         if (stack != null) {
             stack.setTagCompound(nbt);
+            player.inventory.setInventorySlotContents(slot, stack);
         }
     }
 }
