@@ -434,33 +434,28 @@ public class BackPackContainer extends ModularContainer {
         int originalSize = fromStack.stackSize;
 
         if (fromSlot instanceof IndexedModularCraftingSlot craftingSlot) {
-            IndexedInventoryCraftingWrapper inventoryCrafting =
-                inventoryCraftingInstances.get(craftingSlot.getUpgradeSlotIndex());
+            IndexedInventoryCraftingWrapper inventoryCrafting = inventoryCraftingInstances
+                .get(craftingSlot.getUpgradeSlotIndex());
 
             if (inventoryCrafting == null) {
-                transferItemFiltered(fromSlot, fromStack,
-                    slot -> PLAYER_INV.equals(slot.getSlotGroupName()));
-            }
-            else if (inventoryCrafting.getCraftingDestination()
-                == CraftingUpgradeWrapper.CraftingDestination.BACKPACK) {
+                transferItemFiltered(fromSlot, fromStack, slot -> PLAYER_INV.equals(slot.getSlotGroupName()));
+            } else
+                if (inventoryCrafting.getCraftingDestination() == CraftingUpgradeWrapper.CraftingDestination.BACKPACK) {
 
-                transferItemFiltered(fromSlot, fromStack,
-                    slot -> slot instanceof ModularBackpackSlot &&
-                        wrapper.isSlotMemorized(slot.getSlotIndex()),
-                    slot -> slot instanceof ModularBackpackSlot
-                );
-            }
-            else {
-                transferItemFiltered(fromSlot, fromStack,
-                    slot -> PLAYER_INV.equals(slot.getSlotGroupName()));
-            }
-        }
-        else if (PLAYER_INV.equals(fromSlot.getSlotGroupName())) {
-            transferItemFiltered(fromSlot, fromStack,
-                slot -> slot instanceof ModularBackpackSlot &&
-                    wrapper.isSlotMemorized(slot.getSlotIndex()));
-        }
-        else {
+                    transferItemFiltered(
+                        fromSlot,
+                        fromStack,
+                        slot -> slot instanceof ModularBackpackSlot && wrapper.isSlotMemorized(slot.getSlotIndex()),
+                        slot -> slot instanceof ModularBackpackSlot);
+                } else {
+                    transferItemFiltered(fromSlot, fromStack, slot -> PLAYER_INV.equals(slot.getSlotGroupName()));
+                }
+        } else if (PLAYER_INV.equals(fromSlot.getSlotGroupName())) {
+            transferItemFiltered(
+                fromSlot,
+                fromStack,
+                slot -> slot instanceof ModularBackpackSlot && wrapper.isSlotMemorized(slot.getSlotIndex()));
+        } else {
             return super.transferItem(fromSlot, fromStack);
         }
 
@@ -472,11 +467,8 @@ public class BackPackContainer extends ModularContainer {
     }
 
     @SafeVarargs
-    public final void transferItemFiltered(
-        ModularSlot fromSlot,
-        ItemStack fromStack,
-        Predicate<ModularSlot>... slotFilters
-    ) {
+    public final void transferItemFiltered(ModularSlot fromSlot, ItemStack fromStack,
+        Predicate<ModularSlot>... slotFilters) {
         SlotGroup fromSlotGroup = fromSlot.getSlotGroup();
 
         for (Predicate<ModularSlot> slotFilter : slotFilters) {
