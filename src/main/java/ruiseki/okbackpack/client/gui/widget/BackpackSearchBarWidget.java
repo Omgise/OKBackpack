@@ -24,7 +24,7 @@ import ruiseki.okbackpack.common.search.SearchParser;
 
 public class BackpackSearchBarWidget extends TextFieldWidget {
 
-    protected String prevText = "";
+    protected String prevText = " ";
     private final BackpackPanel panel;
     private List<BackpackSlot> originalOrder;
 
@@ -48,6 +48,7 @@ public class BackpackSearchBarWidget extends TextFieldWidget {
     public void onUpdate() {
         super.onUpdate();
         String txt = getText();
+        if (txt.isEmpty()) prevText = " ";
         if (!txt.equals(prevText)) {
             doSearch(txt);
             prevText = txt;
